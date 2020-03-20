@@ -23,7 +23,7 @@ async function searchShows(query) {
   // hard coded data.
   //use destructring in response?
   const res = await axios.get(`http://api.tvmaze.com/search/shows?q=${query}`);
-  console.log(res)
+ 
   let shows = res.data.map(result => {
     let show = result.show;
     return {
@@ -54,6 +54,7 @@ function populateShows(shows) {
            <div class="card-body">
              <h5 class="card-title">${show.name}</h5>
              <p class="card-text">${show.summary}</p>
+             <button class="btn btn-primary get-episodes">Episodes</button>
            </div>
          </div>
        </div>
@@ -88,29 +89,28 @@ $("#search-form").on("submit", async function handleSearch (evt) {
  */
 
 async function getEpisodes(id) {
-  // TODO: get episodes from tvmaze
-  //       you can get this by making GET request to
-  //       http://api.tvmaze.com/shows/SHOW-ID-HERE/episodes
-
-  // TODO: return array-of-episode-info, as described in docstring above
   const res = await axios.get(`http://api.tvmaze.com/shows/${id}/episodes`)
-  
-let episodes = res.data.map(result => {
-  let epi = result.epi;
-    return {
-      id: epi.id,
-      name: epi.name,
-      season: epi.season,
-      number: epi.number
-    }
-  })
 
-  return episodes;
-
+  let episodes = res.data.map(result => ({
+        id: result.id,
+        name: result.name,
+        season: result.season,
+        number: result.number  
+    }))
+    
+    return episodes;
 }
 
+
+
+
+/** Populate episodes list:
+ *     - given list of episodes, add episodes to DOM
+ */
+
 function populateEpisodes(episodes) {
-  const $episodeList = $("episodes-list");
+  const $episodeList = $("#episodes-list");
+ 
   $episodeList.empty();
 
   for(let epi of episodes) {
@@ -119,4 +119,15 @@ function populateEpisodes(episodes) {
     )
     $episodeList.append($item)
   }
+  $("#episodes-area").show();
 }
+
+/** event listener for button to show episodes details **/
+$("#shows-list").on("click", $(".get-episodes"), async function handleEpiClick(e){
+  e.preventDefault();
+ 
+  let id = $('.get-episodes').closest('.Show').data('show-id');
+ 
+  let episodes = await getEpisodes(id);
+  populateEpisodes(episodes);
+})
